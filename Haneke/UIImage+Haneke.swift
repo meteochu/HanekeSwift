@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreGraphics
 
 extension UIImage {
 
@@ -38,13 +39,16 @@ extension UIImage {
         let originalImageRef = self.CGImage
         let originalBitmapInfo = CGImageGetBitmapInfo(originalImageRef)
         let alphaInfo = CGImageGetAlphaInfo(originalImageRef)
+        let noneskipFirst = CGBitmapInfo(rawValue: CGImageAlphaInfo.NoneSkipFirst.rawValue)
         
         // See: http://stackoverflow.com/questions/23723564/which-cgimagealphainfo-should-we-use
         var bitmapInfo = originalBitmapInfo
         switch (alphaInfo) {
         case .None:
-            bitmapInfo &= ~CGBitmapInfo.AlphaInfoMask
-            bitmapInfo |= CGBitmapInfo(CGImageAlphaInfo.NoneSkipFirst.rawValue)
+//            bitmapInfo &= ~CGBitmapInfo.AlphaInfoMask
+            bitmapInfo.subtract(CGBitmapInfo.AlphaInfoMask)
+//            bitmapInfo |= CGBitmapInfo(CGImageAlphaInfo.NoneSkipFirst.rawValue)
+            bitmapInfo.unionInPlace(noneskipFirst)
         case .PremultipliedFirst, .PremultipliedLast, .NoneSkipFirst, .NoneSkipLast:
             break
         case .Only, .Last, .First: // Unsupported
@@ -53,8 +57,9 @@ extension UIImage {
         
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let pixelSize = CGSizeMake(self.size.width * self.scale, self.size.height * self.scale)
-        if let context = CGBitmapContextCreate(nil, Int(ceil(pixelSize.width)), Int(ceil(pixelSize.height)), CGImageGetBitsPerComponent(originalImageRef), 0, colorSpace, bitmapInfo) {
-            
+        
+        if let context = CGBitmapContextCreate(nil, Int(pixelSize.width), Int(pixelSize.height), CGImageGetBitsPerComponent(originalImageRef), 0, colorSpace, bitmapInfo.rawValue)
+        {
             let imageRect = CGRectMake(0, 0, pixelSize.width, pixelSize.height)
             UIGraphicsPushContext(context)
             
