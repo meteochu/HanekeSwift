@@ -33,13 +33,13 @@ extension HanekeGlobals {
     
 }
 
-public class Cache<T : DataConvertible where T.Result == T, T : DataRepresentable> {
+public class Cache<T: DataConvertible where T.Result == T, T : DataRepresentable> {
     
-    let name : String
+    let name: String
     
     var memoryWarningObserver : NSObjectProtocol!
     
-    public init(name : String) {
+    public init(name: String) {
         self.name = name
         
         let notifications = NSNotificationCenter.defaultCenter()
@@ -61,7 +61,8 @@ public class Cache<T : DataConvertible where T.Result == T, T : DataRepresentabl
         notifications.removeObserver(memoryWarningObserver, name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
     }
     
-    public func set(value value : T, key: String, formatName : String = HanekeGlobals.Cache.OriginalFormatName, success succeed : ((T) -> ())? = nil) {
+    public func set(value value: T, key: String, formatName: String = HanekeGlobals.Cache.OriginalFormatName, success succeed: ((T) -> ())? = nil) {
+
         if let (format, memoryCache, diskCache) = self.formats[formatName] {
             self.format(value: value, format: format) { formattedValue in
                 let wrapper = ObjectWrapper(value: formattedValue)
@@ -75,7 +76,8 @@ public class Cache<T : DataConvertible where T.Result == T, T : DataRepresentabl
         }
     }
     
-    public func fetch(key key : String, formatName : String = HanekeGlobals.Cache.OriginalFormatName, failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
+    public func fetch(key key: String, formatName: String = HanekeGlobals.Cache.OriginalFormatName, failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
+
         let fetch = Cache.buildFetch(failure: fail, success: succeed)
         if let (format, memoryCache, diskCache) = self.formats[formatName] {
             if let wrapper = memoryCache.objectForKey(key) as? ObjectWrapper, let result = wrapper.value as? T {
@@ -99,7 +101,7 @@ public class Cache<T : DataConvertible where T.Result == T, T : DataRepresentabl
         return fetch
     }
     
-    public func fetch(fetcher fetcher : Fetcher<T>, formatName : String = HanekeGlobals.Cache.OriginalFormatName, failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
+    public func fetch(fetcher fetcher : Fetcher<T>, formatName: String = HanekeGlobals.Cache.OriginalFormatName, failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
         let key = fetcher.key
         let fetch = Cache.buildFetch(failure: fail, success: succeed)
         self.fetch(key: key, formatName: formatName, failure: { error in
@@ -122,20 +124,41 @@ public class Cache<T : DataConvertible where T.Result == T, T : DataRepresentabl
         return fetch
     }
 
-    public func remove(key key : String, formatName : String = HanekeGlobals.Cache.OriginalFormatName) {
+    public func remove(key key: String, formatName: String = HanekeGlobals.Cache.OriginalFormatName) {
         if let (_, memoryCache, diskCache) = self.formats[formatName] {
             memoryCache.removeObjectForKey(key)
             diskCache.removeData(key)
         }
     }
     
-    public func removeAll() {
+    public func removeAll(completion: (() -> ())? = nil) {
+        let group = dispatch_group_create();
         for (_, (_, memoryCache, diskCache)) in self.formats {
             memoryCache.removeAllObjects()
-            diskCache.removeAllData()
+            dispatch_group_enter(group)
+            diskCache.removeAllData {
+                dispatch_group_leave(group)
+            }
+        }
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+            let timeout = dispatch_time(DISPATCH_TIME_NOW, Int64(60 * NSEC_PER_SEC))
+            if dispatch_group_wait(group, timeout) != 0 {
+                Log.error("removeAll timed out waiting for disk caches")
+            }
+            let path = self.cachePath
+            do {
+                try NSFileManager.defaultManager().removeItemAtPath(path)
+            } catch {
+                Log.error("Failed to remove path \(path)", error as NSError)
+            }
+            if let completion = completion {
+                dispatch_async(dispatch_get_main_queue()) {
+                    completion()
+                }
+            }
         }
     }
-    
+
     // MARK: Notifications
     
     func onMemoryWarning() {
@@ -158,25 +181,18 @@ public class Cache<T : DataConvertible where T.Result == T, T : DataRepresentabl
     
     // MARK: Internal
     
-    lazy var cachePath : String = {
+    lazy var cachePath: String = {
         let basePath = DiskCache.basePath()
         let cachePath = (basePath as NSString).stringByAppendingPathComponent(self.name)
         return cachePath
     }()
-    
-    func formatPath(formatName formatName : String) -> String {
+
+    func formatPath(formatName formatName: String) -> String {
         let formatPath = (self.cachePath as NSString).stringByAppendingPathComponent(formatName)
-        var formatError : NSError? = nil
-        let success: Bool
         do {
             try NSFileManager.defaultManager().createDirectoryAtPath(formatPath, withIntermediateDirectories: true, attributes: nil)
-            success = true
         } catch {
-            formatError = error as NSError
-            success = false
-        }
-        if (!success) {
-            Log.error("Failed to create directory \(formatPath)", formatError)
+            Log.error("Failed to create directory \(formatPath)", error as NSError)
         }
         return formatPath
     }
@@ -190,8 +206,8 @@ public class Cache<T : DataConvertible where T.Result == T, T : DataRepresentabl
         return value.asData()
     }
     
-    private func fetchFromDiskCache(diskCache : DiskCache, key : String, memoryCache : NSCache, failure fail : ((NSError?) -> ())?, success succeed : (T) -> ()) {
-        diskCache.fetchData(key, failure: { error in
+    private func fetchFromDiskCache(diskCache : DiskCache, key: String, memoryCache : NSCache, failure fail : ((NSError?) -> ())?, success succeed : (T) -> ()) {
+        diskCache.fetchData(key: key, failure: { error in
             if let block = fail {
                 if (error?.code == NSFileReadNoSuchFileError) {
                     let localizedFormat = NSLocalizedString("Object not found for key %@", comment: "Error description")
@@ -269,17 +285,19 @@ public class Cache<T : DataConvertible where T.Result == T, T : DataRepresentabl
     // MARK: Convenience fetch
     // Ideally we would put each of these in the respective fetcher file as a Cache extension. Unfortunately, this fails to link when using the framework in a project as of Xcode 6.1.
     
-    public func fetch(key key : String, @autoclosure(escaping) value getValue : () -> T.Result, formatName : String = HanekeGlobals.Cache.OriginalFormatName, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
+
+    public func fetch(key key: String, @autoclosure(escaping) value getValue : () -> T.Result, formatName: String = HanekeGlobals.Cache.OriginalFormatName, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
         let fetcher = SimpleFetcher<T>(key: key, value: getValue)
         return self.fetch(fetcher: fetcher, formatName: formatName, success: succeed)
     }
     
-    public func fetch(path path : String, formatName : String = HanekeGlobals.Cache.OriginalFormatName,  failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
+    public func fetch(path path: String, formatName: String = HanekeGlobals.Cache.OriginalFormatName,  failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
         let fetcher = DiskFetcher<T>(path: path)
         return self.fetch(fetcher: fetcher, formatName: formatName, failure: fail, success: succeed)
     }
-    
-    public func fetch(URL URL : NSURL, formatName : String = HanekeGlobals.Cache.OriginalFormatName,  failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
+        
+        
+    public func fetch(URL URL : NSURL, formatName: String = HanekeGlobals.Cache.OriginalFormatName,  failure fail : Fetch<T>.Failer? = nil, success succeed : Fetch<T>.Succeeder? = nil) -> Fetch<T> {
         let fetcher = NetworkFetcher<T>(URL: URL)
         return self.fetch(fetcher: fetcher, formatName: formatName, failure: fail, success: succeed)
     }

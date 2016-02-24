@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0700"
+   LastUpgradeVersion = "0720"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,23 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A0026E9919C9BFBC004DE0C6"
-               BuildableName = "HanekeDemo.app"
-               BlueprintName = "HanekeDemo"
-               ReferencedContainer = "container:Haneke.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A0026EAD19C9BFBC004DE0C6"
-               BuildableName = "HanekeDemoTests.xctest"
-               BlueprintName = "HanekeDemoTests"
+               BlueprintIdentifier = "6393C5DA1C3B229200EB1FD8"
+               BuildableName = "Haneke.framework"
+               BlueprintName = "Haneke-tvOS"
                ReferencedContainer = "container:Haneke.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,9 +32,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A0026EAD19C9BFBC004DE0C6"
-               BuildableName = "HanekeDemoTests.xctest"
-               BlueprintName = "HanekeDemoTests"
+               BlueprintIdentifier = "A095C9601980418C00CD0F4C"
+               BuildableName = "HanekeTests.xctest"
+               BlueprintName = "HanekeTests"
                ReferencedContainer = "container:Haneke.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -56,9 +42,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A0026E9919C9BFBC004DE0C6"
-            BuildableName = "HanekeDemo.app"
-            BlueprintName = "HanekeDemo"
+            BlueprintIdentifier = "6393C5DA1C3B229200EB1FD8"
+            BuildableName = "Haneke.framework"
+            BlueprintName = "Haneke-tvOS"
             ReferencedContainer = "container:Haneke.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -75,16 +61,15 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A0026E9919C9BFBC004DE0C6"
-            BuildableName = "HanekeDemo.app"
-            BlueprintName = "HanekeDemo"
+            BlueprintIdentifier = "6393C5DA1C3B229200EB1FD8"
+            BuildableName = "Haneke.framework"
+            BlueprintName = "Haneke-tvOS"
             ReferencedContainer = "container:Haneke.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -94,16 +79,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A0026E9919C9BFBC004DE0C6"
-            BuildableName = "HanekeDemo.app"
-            BlueprintName = "HanekeDemo"
+            BlueprintIdentifier = "6393C5DA1C3B229200EB1FD8"
+            BuildableName = "Haneke.framework"
+            BlueprintName = "Haneke-tvOS"
             ReferencedContainer = "container:Haneke.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

@@ -1,15 +1,19 @@
 ![Haneke](https://raw.githubusercontent.com/Haneke/HanekeSwift/master/Assets/github-header.png)
 
+[![Cocoapods Version](https://cocoapod-badges.herokuapp.com/v/HanekeSwift/badge.png)](http://cocoadocs.org/docsets/HanekeSwift)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Platform](https://cocoapod-badges.herokuapp.com/p/HanekeSwift/badge.png)](http://cocoadocs.org/docsets/HanekeSwift)
+[![Build Status](https://travis-ci.org/Haneke/HanekeSwift.svg?branch=master)](https://travis-ci.org/Haneke/HanekeSwift)
+[![Join the chat at https://gitter.im/Haneke/HanekeSwift](https://badges.gitter.im/Haneke/HanekeSwift.svg)](https://gitter.im/Haneke/HanekeSwift?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Haneke is a lightweight *generic* cache for iOS written in Swift 2.0. It's designed to be super-simple to use. Here's how you would initalize a JSON cache and fetch objects from a url:
+Haneke is a lightweight *generic* cache for iOS and tvOS written in Swift 2.0. It's designed to be super-simple to use. Here's how you would initalize a JSON cache and fetch objects from a url:
 
 ```swift
 let cache = Cache<JSON>(name: "github")
 let URL = NSURL(string: "https://api.github.com/users/haneke")!
-    
+
 cache.fetch(URL: URL).onSuccess { JSON in
-   println(JSON.dictionary?["bio"])
+    print(JSON.dictionary?["bio"])
 }
 ```
 
@@ -65,9 +69,8 @@ Manually:
 
 ## Requirements
 
-- iOS 8.0+
-- Xcode 7.0
-
+- iOS 8.0+ or tvOS 9.1+
+- Swift 2.0
 
 ## Using the cache
 
@@ -91,11 +94,10 @@ In most cases the value will not be readily available and will have to be fetche
 
 ```Swift
 let cache = Shared.JSONCache
-let cache = Haneke.sharedJSONCache
 let URL = NSURL(string: "https://api.github.com/users/haneke")!
     
 cache.fetch(URL: URL).onSuccess { JSON in
-   println(JSON.dictionary?["bio"])
+   print(JSON.dictionary?["bio"])
 }
 ```
 

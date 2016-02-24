@@ -8,6 +8,7 @@
 
 import UIKit
 import XCTest
+@testable import Haneke
 
 class ImageDataTests: XCTestCase {
 
@@ -17,7 +18,7 @@ class ImageDataTests: XCTestCase {
 
         let result = UIImage.convertFromData(data)
 
-        XCTAssertTrue(image.isEqualPixelByPixel(image))
+        XCTAssertTrue(image.isEqualPixelByPixel(result!))
     }
     
     func testAsData() {
@@ -98,12 +99,12 @@ class JSONDataTests: XCTestCase {
         
         switch result {
         case .Dictionary(let object):
-            let resultData = try! NSJSONSerialization.dataWithJSONObject(object, options: NSJSONWritingOptions())
+            try! NSJSONSerialization.dataWithJSONObject(object, options: NSJSONWritingOptions())
         case .Array(_):
             XCTFail("expected dictionary")
         }
     }
-    
+
     func testConvertFromData_WithInvalidData() {
         let data = NSData.dataWithLength(100)
 
@@ -133,11 +134,11 @@ class JSONDataTests: XCTestCase {
     }
     
     func testAsData_InvalidJSON() {
-        let object = ["test": UIImage.imageWithColor(UIColor.redColor())]
-        let json = JSON.Dictionary(object)
-        
         // TODO: Swift doesn't support XCAssertThrows yet.
         // See: http://stackoverflow.com/questions/25529625/testing-assertion-in-swift
+        
+        // let object = ["test": UIImage.imageWithColor(UIColor.redColor())]
+        // let json = JSON.Dictionary(object)
         // XCAssertThrows(json.asData())
     }
     

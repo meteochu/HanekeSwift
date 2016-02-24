@@ -7,6 +7,7 @@
 //
 
 import XCTest
+@testable import Haneke
 
 class HanekeTests: XCTestCase {
 
@@ -21,19 +22,19 @@ class HanekeTests: XCTestCase {
     }
     
     func testSharedImageCache() {
-        let cache = Shared.imageCache
+        Shared.imageCache
     }
     
     func testSharedDataCache() {
-        let cache = Shared.dataCache
+        Shared.dataCache
     }
     
     func testSharedStringCache() {
-        let cache = Shared.stringCache
+        Shared.stringCache
     }
     
     func testSharedJSONCache() {
-        let cache = Shared.JSONCache
+        Shared.JSONCache
     }
     
 }

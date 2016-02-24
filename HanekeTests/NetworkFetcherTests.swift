@@ -8,6 +8,8 @@
 
 import UIKit
 import XCTest
+import OHHTTPStubs
+@testable import Haneke
 
 class NetworkFetcherTests: XCTestCase {
 
@@ -29,7 +31,7 @@ class NetworkFetcherTests: XCTestCase {
     }
 
     func testKey() {
-        XCTAssertEqual(sut.key, URL.absoluteString!)
+        XCTAssertEqual(sut.key, URL.absoluteString)
     }
     
     func testFetchImage_Success() {
@@ -38,7 +40,7 @@ class NetworkFetcherTests: XCTestCase {
             return true
         }, withStubResponse: { _ in
             let data = UIImagePNGRepresentation(image)
-            return OHHTTPStubsResponse(data: data, statusCode: 200, headers:nil)
+            return OHHTTPStubsResponse(data: data!, statusCode: 200, headers:nil)
         })
         let expectation = self.expectationWithDescription(self.name)
         
@@ -54,29 +56,14 @@ class NetworkFetcherTests: XCTestCase {
         self.waitForExpectationsWithTimeout(1, handler: nil)
     }
     
-    func testFetchImage_Success_AfterCancelFetch() {
-        let image = UIImage.imageWithColor(UIColor.greenColor())
-        OHHTTPStubs.stubRequestsPassingTest({ _ in
-            return true
-        }, withStubResponse: { _ in
-            let data = UIImagePNGRepresentation(image)
-            return OHHTTPStubsResponse(data: data, statusCode: 200, headers:nil)
-        })
-        let expectation = self.expectationWithDescription(self.name)
-        sut.cancelFetch()
-        
-        sut.fetch(failure: { _ in
-            XCTFail("expected success")
-            expectation.fulfill()
-        }) {
-            let result = $0 as UIImage
-            XCTAssertTrue(result.isEqualPixelByPixel(image))
-            expectation.fulfill()
-        }
-        
-        self.waitForExpectationsWithTimeout(1, handler: nil)
+    func testFetchImage_Success_StatusCode200() {
+        self.testFetchImageSuccessWithStatusCode(200)
     }
-    
+
+    func testFetchImage_Success_StatusCode201() {
+        self.testFetchImageSuccessWithStatusCode(201)
+    }
+
     func testFetchImage_Failure_InvalidStatusCode_401() {
         self.testFetchImageFailureWithInvalidStatusCode(401)
     }
@@ -143,7 +130,7 @@ class NetworkFetcherTests: XCTestCase {
             return true
         }, withStubResponse: { _ in
             let data = UIImagePNGRepresentation(image)
-            return OHHTTPStubsResponse(data: data, statusCode: 200, headers:nil)
+            return OHHTTPStubsResponse(data: data!, statusCode: 200, headers:nil)
         })
         sut.fetch(failure: {_ in
             XCTFail("unexpected failure")
@@ -165,7 +152,30 @@ class NetworkFetcherTests: XCTestCase {
     }
     
     // MARK: Private
-    
+
+    private func testFetchImageSuccessWithStatusCode(statusCode : Int32) {
+        let image = UIImage.imageWithColor(UIColor.greenColor())
+        OHHTTPStubs.stubRequestsPassingTest({ _ in
+            return true
+            }, withStubResponse: { _ in
+                let data = UIImagePNGRepresentation(image)
+                return OHHTTPStubsResponse(data: data!, statusCode: statusCode, headers:nil)
+        })
+        let expectation = self.expectationWithDescription(self.name)
+        sut.cancelFetch()
+
+        sut.fetch(failure: { _ in
+            XCTFail("expected success")
+            expectation.fulfill()
+            }) {
+                let result = $0 as UIImage
+                XCTAssertTrue(result.isEqualPixelByPixel(image))
+                expectation.fulfill()
+        }
+
+        self.waitForExpectationsWithTimeout(1, handler: nil)
+    }
+
     private func testFetchImageFailureWithInvalidStatusCode(statusCode : Int32) {
         OHHTTPStubs.stubRequestsPassingTest({ _ in
             return true

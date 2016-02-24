@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 import XCTest
+@testable import Haneke
 
 class CacheTests: XCTestCase {
     
@@ -20,7 +21,13 @@ class CacheTests: XCTestCase {
     }
     
     override func tearDown() {
-        sut.removeAll()
+        var completed = false
+        sut.removeAll {
+            completed = true
+        }
+        self.wait(5) {
+            return completed
+        }
         super.tearDown()
     }
     
@@ -33,13 +40,13 @@ class CacheTests: XCTestCase {
     }
     
     func testDeinit() {
-        weak var sut = Cache<UIImage>(name: self.name)
+        weak var _ = Cache<UIImage>(name: self.name)
     }
     
     // MARK: cachePath
     
     func testCachePath() {
-        let expectedCachePath = DiskCache.basePath().stringByAppendingPathComponent(sut.name)
+        let expectedCachePath = (DiskCache.basePath() as NSString).stringByAppendingPathComponent(sut.name)
         XCTAssertEqual(sut.cachePath, expectedCachePath)
     }
     
@@ -47,7 +54,7 @@ class CacheTests: XCTestCase {
     
     func testFormatPath() {
         let formatName = self.name
-        let expectedFormatPath = sut.cachePath.stringByAppendingPathComponent(formatName)
+        let expectedFormatPath = (sut.cachePath as NSString).stringByAppendingPathComponent(formatName)
         
         let formatPath = sut.formatPath(formatName: formatName)
         
@@ -56,7 +63,7 @@ class CacheTests: XCTestCase {
     
     func testFormatPath_WithEmptyName() {
         let formatName = ""
-        let expectedFormatPath = sut.cachePath.stringByAppendingPathComponent(formatName)
+        let expectedFormatPath = (sut.cachePath as NSString).stringByAppendingPathComponent(formatName)
         
         let formatPath = sut.formatPath(formatName: formatName)
         
@@ -107,12 +114,12 @@ class CacheTests: XCTestCase {
     }
     
     func testSet_WithInexistingFormat () {
-        let sut = self.sut!
-        let image = UIImage.imageWithColor(UIColor.greenColor())
-        let key = self.name
-        
-        // TODO: Swift doesn't support XCAssertThrows yet. 
+        // TODO: Swift doesn't support XCAssertThrows yet.
         // See: http://stackoverflow.com/questions/25529625/testing-assertion-in-swift
+
+        // let sut = self.sut!
+        // let image = UIImage.imageWithColor(UIColor.greenColor())
+        // let key = self.name
         // XCAssertThrows(sut.set(value: image, key: key, formatName : self.name))
     }
     
@@ -235,7 +242,7 @@ class CacheTests: XCTestCase {
     func testFetch_AfterClearingMemoryCache_WithKeyAndFormatWithDiskCapacity_ExpectSuccess() {
         let key = self.name
         let data = NSData.dataWithLength(9)
-        var format = Format<NSData>(name: self.name)
+        let format = Format<NSData>(name: self.name)
         sut.addFormat(format)
         let expectation = self.expectationWithDescription(self.name)
         sut.set(value: data, key: key, formatName: format.name)
@@ -482,6 +489,35 @@ class CacheTests: XCTestCase {
         }
         self.waitForExpectationsWithTimeout(1, handler: nil)
     }
+
+    func testRemoveAll_Completion() {
+        let key = self.name
+        sut.set(value: NSData.dataWithLength(18), key: key)
+        let expectation = self.expectationWithDescription("removeAll")
+        var completed = false
+        sut.removeAll {
+            completed = true
+            expectation.fulfill()
+        }
+
+        XCTAssertFalse(completed)
+        self.waitForExpectationsWithTimeout(1, handler: nil)
+    }
+
+    func testRemoveAll_WhenDataAlreadyPresentInCachePath() {
+        let path = (sut.cachePath as NSString).stringByAppendingPathComponent("test")
+        let data = NSData.dataWithLength(1)
+        data.writeToFile(path, atomically: true)
+        XCTAssertTrue(NSFileManager.defaultManager().fileExistsAtPath(path))
+
+        let expectation = self.expectationWithDescription("removeAll")
+        sut.removeAll {
+            expectation.fulfill()
+        }
+
+        self.waitForExpectationsWithTimeout(1, handler: nil)
+        XCTAssertFalse(NSFileManager.defaultManager().fileExistsAtPath(path))
+    }
     
     func testRemoveAll_AfterNone() {
         sut.removeAll()
@@ -567,7 +603,6 @@ class ImageCacheTests: XCTestCase {
                 expectation.fulfill()
             }
             
-            self.waitForExpectationsWithTimeout(0, handler: nil)
         })
         
         self.waitForExpectationsWithTimeout(1, handler: nil)
@@ -579,7 +614,7 @@ class FailFetcher<T : DataConvertible> : Fetcher<T> {
     
     var error : NSError!
     
-    override init(key : String) {
+    override init(key: String) {
         super.init(key: key)
     }
     

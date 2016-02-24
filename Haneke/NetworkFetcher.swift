@@ -59,7 +59,7 @@ public class NetworkFetcher<T : DataConvertible> : Fetcher<T> {
     
     // MARK: Private
     
-    private func onReceiveData(data : NSData!, response : NSURLResponse!, error : NSError!, failure fail : ((NSError?) -> ()), success succeed : (T.Result) -> ()) {
+    private func onReceiveData(data: NSData!, response: NSURLResponse!, error: NSError!, failure fail: ((NSError?) -> ()), success succeed: (T.Result) -> ()) {
 
         if cancelled { return }
         
@@ -73,39 +73,32 @@ public class NetworkFetcher<T : DataConvertible> : Fetcher<T> {
             return
         }
         
-        // Intentionally avoiding `if let` to continue in golden path style.
-        let httpResponse : NSHTTPURLResponse! = response as? NSHTTPURLResponse
-        if httpResponse == nil {
-            Log.debug("Request \(URL.absoluteString) received unknown response \(response)")
-            return
-        }
-        
-        if httpResponse?.statusCode != 200 {
+
+        if let httpResponse = response as? NSHTTPURLResponse where !httpResponse.hnk_isValidStatusCode() {
             let description = NSHTTPURLResponse.localizedStringForStatusCode(httpResponse.statusCode)
             self.failWithCode(.InvalidStatusCode, localizedDescription: description, failure: fail)
             return
         }
-        
-        if !httpResponse.hnk_validateLengthOfData(data) {
+
+        if !response.hnk_validateLengthOfData(data) {
             let localizedFormat = NSLocalizedString("Request expected %ld bytes and received %ld bytes", comment: "Error description")
             let description = String(format:localizedFormat, response.expectedContentLength, data.length)
             self.failWithCode(.MissingData, localizedDescription: description, failure: fail)
             return
         }
         
-        let value : T.Result? = T.convertFromData(data)
-        if value == nil {
+        guard let value = T.convertFromData(data) else {
             let localizedFormat = NSLocalizedString("Failed to convert value from data at URL %@", comment: "Error description")
             let description = String(format:localizedFormat, URL.absoluteString)
             self.failWithCode(.InvalidData, localizedDescription: description, failure: fail)
             return
         }
 
-        dispatch_async(dispatch_get_main_queue()) { succeed(value!) }
+        dispatch_async(dispatch_get_main_queue()) { succeed(value) }
 
     }
     
-    private func failWithCode(code : HanekeGlobals.NetworkFetcher.ErrorCode, localizedDescription : String, failure fail : ((NSError?) -> ())) {
+    private func failWithCode(code: HanekeGlobals.NetworkFetcher.ErrorCode, localizedDescription: String, failure fail: ((NSError?) -> ())) {
         let error = errorWithCode(code.rawValue, description: localizedDescription)
         Log.debug(localizedDescription, error)
         dispatch_async(dispatch_get_main_queue()) { fail(error) }
