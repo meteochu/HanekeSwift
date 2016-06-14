@@ -135,8 +135,18 @@ class MD5 : HashBase {
         // Process the message in successive 512-bit chunks:
         let chunkSizeBytes = 512 / 8 // 64
         var leftMessageBytes = tmpMessage.length
+<<<<<<< HEAD
         
         for i in (0..<tmpMessage.length).map({ $0 }).filter({ $0 % chunkSizeBytes == 0 })  {
+=======
+        var i = 0
+        while i < tmpMessage.length {
+            defer {
+                i = i + chunkSizeBytes
+                leftMessageBytes -= chunkSizeBytes
+            }
+
+>>>>>>> Haneke/master
             let chunk = tmpMessage.subdataWithRange(NSRange(location: i, length: min(chunkSizeBytes,leftMessageBytes)))
             
             // break chunk into sixteen 32-bit words M[j], 0 ≤ j ≤ 15

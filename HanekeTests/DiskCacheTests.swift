@@ -15,7 +15,7 @@ class DiskCacheTests: XCTestCase {
     var sut : DiskCache!
     
     lazy var diskCachePath: String = {
-        let diskCachePath =  (DiskCache.basePath() as NSString).stringByAppendingPathComponent(self.name)
+        let diskCachePath =  (DiskCache.basePath() as NSString).stringByAppendingPathComponent(self.name!)
         try! NSFileManager.defaultManager().createDirectoryAtPath(diskCachePath, withIntermediateDirectories: true, attributes: nil)
         return diskCachePath
     }()
@@ -126,7 +126,7 @@ class DiskCacheTests: XCTestCase {
     }
     
     func testSetCapacity() {
-        sut.setData(NSData.dataWithLength(1), key: self.name)
+        sut.setData(NSData.dataWithLength(1), key: self.name!)
         
         sut.capacity = 0
         
@@ -137,7 +137,7 @@ class DiskCacheTests: XCTestCase {
     
     func testSetData() {
         let data = UIImagePNGRepresentation(UIImage.imageWithColor(UIColor.redColor()))!
-        let key = self.name
+        let key = self.name!
         let path = sut.pathForKey(key)
         
         sut.setData(data, key: key)
@@ -200,7 +200,7 @@ class DiskCacheTests: XCTestCase {
     func testSetDataReplace() {
         let originalData = NSData.dataWithLength(5)
         let data = NSData.dataWithLength(14)
-        let key = self.name
+        let key = self.name!
         let path = sut.pathForKey(key)
         sut.setData(originalData, key: key)
         
@@ -216,7 +216,7 @@ class DiskCacheTests: XCTestCase {
     }
     
     func testSetDataNil() {
-        let key = self.name
+        let key = self.name!
         let path = sut.pathForKey(key)
         
         sut.setData({ return nil }(), key: key)
@@ -230,7 +230,7 @@ class DiskCacheTests: XCTestCase {
     
     func testSetDataControlCapacity() {
         let sut = DiskCache(path: diskCachePath, capacity:0)
-        let key = self.name
+        let key = self.name!
         let path = sut.pathForKey(key)
         
         sut.setData(NSData.dataWithLength(1), key: key)
@@ -244,10 +244,10 @@ class DiskCacheTests: XCTestCase {
     
     func testFetchData() {
         let data = NSData.dataWithLength(14)
-        let key = self.name
+        let key = self.name!
         sut.setData(data, key : key)
         
-        let expectation = self.expectationWithDescription(self.name)
+        let expectation = self.expectationWithDescription(key)
         
         sut.fetchData(key: key, success: {
             expectation.fulfill()
@@ -259,8 +259,8 @@ class DiskCacheTests: XCTestCase {
     }
     
     func testFetchData_Inexisting() {
-        let key = self.name
-        let expectation = self.expectationWithDescription(self.name)
+        let key = self.name!
+        let expectation = self.expectationWithDescription(key)
         
         sut.fetchData(key: key, failure : { error in
             XCTAssertEqual(error!.code, NSFileReadNoSuchFileError)
@@ -275,7 +275,7 @@ class DiskCacheTests: XCTestCase {
     }
     
     func testFetchData_Inexisting_NilFailureBlock() {
-        let key = self.name
+        let key = self.name!
         
         sut.fetchData(key: key, success: { _ in
             XCTFail("Expected failure")
@@ -287,14 +287,14 @@ class DiskCacheTests: XCTestCase {
     func testFetchData_UpdateAccessDate() {
         let now = NSDate()
         let data = NSData.dataWithLength(19)
-        let key = self.name
+        let key = self.name!
         sut.setData(data, key : key)
         let path = sut.pathForKey(key)
         let fileManager = NSFileManager.defaultManager()
         dispatch_sync(sut.cacheQueue, {
             try! fileManager.setAttributes([NSFileModificationDate : NSDate.distantPast()], ofItemAtPath: path)
         })
-        let expectation = self.expectationWithDescription(self.name)
+        let expectation = self.expectationWithDescription(key)
         
         // Preconditions
         dispatch_sync(sut.cacheQueue) {
@@ -320,7 +320,7 @@ class DiskCacheTests: XCTestCase {
     func testUpdateAccessDateFileInDisk() {
         let now = NSDate()
         let data = NSData.dataWithLength(10)
-        let key = self.name
+        let key = self.name!
         sut.setData(data, key : key)
         let path = sut.pathForKey(key)
         let fileManager = NSFileManager.defaultManager()
@@ -348,7 +348,7 @@ class DiskCacheTests: XCTestCase {
     
     func testUpdateAccessDateFileNotInDisk() {
         let image = UIImage.imageWithColor(UIColor.redColor())
-        let key = self.name
+        let key = self.name!
         let path = sut.pathForKey(key)
         let fileManager = NSFileManager.defaultManager()
         
@@ -381,7 +381,7 @@ class DiskCacheTests: XCTestCase {
     }
     
     func testRemoveDataExisting() {
-        let key = self.name
+        let key = self.name!
         let data = UIImagePNGRepresentation(UIImage.imageWithColor(UIColor.redColor()))
         let path = sut.pathForKey(key)
         sut.setData(data, key: key)
@@ -396,18 +396,18 @@ class DiskCacheTests: XCTestCase {
     }
     
     func testRemoveDataInexisting() {
-        let key = self.name
+        let key = self.name!
         let path = sut.pathForKey(key)
         let fileManager = NSFileManager.defaultManager()
         
         // Preconditions
         XCTAssertFalse(fileManager.fileExistsAtPath(path))
         
-        sut.removeData(self.name)
+        sut.removeData(key)
     }
     
     func testRemoveAllData_Filled() {
-        let key = self.name
+        let key = self.name!
         let data = NSData.dataWithLength(12)
         let path = sut.pathForKey(key)
         sut.setData(data, key: key)
@@ -422,10 +422,10 @@ class DiskCacheTests: XCTestCase {
     }
 
     func testRemoveAllData_Completion_Filled() {
-        let key = self.name
+        let key = self.name!
         let data = NSData.dataWithLength(12)
         sut.setData(data, key: key)
-        let expectation = self.expectationWithDescription(self.name)
+        let expectation = self.expectationWithDescription(key)
 
         var completed = false
         sut.removeAllData {
@@ -438,7 +438,7 @@ class DiskCacheTests: XCTestCase {
     }
 
     func testRemoveAllData_Empty() {
-        let key = self.name
+        let key = self.name!
         let path = sut.pathForKey(key)
         let fileManager = NSFileManager.defaultManager()
         
@@ -449,7 +449,7 @@ class DiskCacheTests: XCTestCase {
     }
     
     func testRemoveAllData_ThenSetData() {
-        let key = self.name
+        let key = self.name!
         let path = sut.pathForKey(key)
         let data = NSData.dataWithLength(12)
         
@@ -491,7 +491,7 @@ class DiskCacheTests: XCTestCase {
         let data = NSData.dataWithLength(length)
         let path = (directory as NSString).stringByAppendingPathComponent("\(dataIndex)")
         data.writeToFile(path, atomically: true)
-        dataIndex++
+        dataIndex += 1
         return path
     }
 
