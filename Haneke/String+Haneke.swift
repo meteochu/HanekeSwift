@@ -11,15 +11,14 @@ import Foundation
 extension String {
     
     func escapedFilename() -> String {
-        return [ "\0":"%00", ":":"%3A", "/":"%2F" ]
-            .reduce(self.componentsSeparatedByString("%").joinWithSeparator("%25")) {
-                str, m in str.componentsSeparatedByString(m.0).joinWithSeparator(m.1)
+        return [ "\0":"%00", ":":"%3A", "/":"%2F" ].reduce(self.components(separatedBy: "%").joined(separator: "%25")) { str, m in
+            str.components(separatedBy: m.0).joined(separator: m.1)
         }
     }
     
 
     func MD5String() -> String {
-        guard let data = self.dataUsingEncoding(NSUTF8StringEncoding) else {
+        guard let data = self.data(using: String.Encoding.utf8) else {
             return self
         }
 
@@ -41,7 +40,7 @@ extension String {
         let pathExtension = NSURL(string: self)?.pathExtension ?? (self as NSString).pathExtension
 
         if pathExtension.characters.count > 0 {
-            return (MD5String as NSString).stringByAppendingPathExtension(pathExtension) ?? MD5String
+            return (MD5String as NSString).appendingPathExtension(pathExtension) ?? MD5String
         } else {
             return MD5String as String
         }

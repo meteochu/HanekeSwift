@@ -31,22 +31,22 @@ public class Fetch<T> {
     
     public init() {}
     
-    public func onSuccess(onSuccess: Succeeder) -> Self {
+    public func onSuccess(_ onSuccess: Succeeder?) -> Self {
         self.onSuccess = onSuccess
         switch self.state {
         case FetchState.Success(let wrapper):
-            onSuccess(wrapper.value)
+            onSuccess!(wrapper.value)
         default:
             break
         }
         return self
     }
     
-    public func onFailure(onFailure: Failer) -> Self {
+    public func onFailure(_ onFailure: Failer?) -> Self {
         self.onFailure = onFailure
         switch self.state {
         case FetchState.Failure(let error):
-            onFailure(error)
+            onFailure!(error)
         default:
             break
         }
