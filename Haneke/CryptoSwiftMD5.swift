@@ -25,26 +25,26 @@ import Foundation
 
 /** array of bytes, little-endian representation */
 func arrayOfBytes<T>(value:T, length:Int? = nil) -> [UInt8] {
-    let totalBytes = length ?? (sizeofValue(value) * 8)
-    
-    let valuePointer = UnsafeMutablePointer<T>(allocatingCapacity: 1)
+    let totalBytes = length ?? (MemoryLayout.size(ofValue: value) * 8)
+    let valuePointer = UnsafeMutablePointer.allocate(capacity: 1) as UnsafeMutablePointer<T>
     valuePointer.pointee = value
     
-    let bytesPointer = UnsafeMutablePointer<UInt8>(valuePointer)
+    let bytesPointer = valuePointer.withMemoryRebound(to: UInt8.self, capacity: 1, { $0 })
+    
     var bytes = [UInt8](repeating: 0, count: totalBytes)
-    for j in 0..<min(sizeof(T),totalBytes) {
+    for j in 0..<min(MemoryLayout<T>.size,totalBytes) {
         bytes[totalBytes - 1 - j] = (bytesPointer + j).pointee
     }
     
     valuePointer.deinitialize()
-    valuePointer.deallocateCapacity(1)
+    valuePointer.deallocate(capacity: 1)
     
     return bytes
 }
 
 extension Int {
     /** Array of bytes with optional padding (little-endian) */
-    public func bytes(totalBytes: Int = sizeof(Int)) -> [UInt8] {
+    public func bytes(totalBytes: Int = MemoryLayout<Int>.size) -> [UInt8] {
         return arrayOfBytes(value: self, length: totalBytes)
     }
     
@@ -61,9 +61,9 @@ extension NSMutableData {
 
 class HashBase {
     
-    var message: NSData
+    var message: Data
     
-    init(_ message: NSData) {
+    init(_ message: Data) {
         self.message = message
     }
     
@@ -81,8 +81,9 @@ class HashBase {
             counter += 1
             msgLength += 1
         }
-        let bufZeros = UnsafeMutablePointer<UInt8>(calloc(counter, sizeof(UInt8)))
-        tmpMessage.append(bufZeros!, length: counter)
+        
+        let bufZeros = calloc(counter, MemoryLayout<UInt8>.size).assumingMemoryBound(to: UInt8.self)
+        tmpMessage.append(bufZeros, length: counter)
         
         return tmpMessage
     }
@@ -120,14 +121,14 @@ class MD5 : HashBase {
     
     private let h:[UInt32] = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476]
     
-    func calculate() -> NSData {
+    func calculate() -> Data {
         let tmpMessage = prepare()
         
         // hash values
         var hh = h
         
         // Step 2. Append Length a 64-bit representation of lengthInBits
-        let lengthInBits = (message.length * 8)
+        let lengthInBits = (message.count * 8)
         let lengthBytes = lengthInBits.bytes(totalBytes: 64 / 8)
         tmpMessage.appendBytes(arrayOfBytes: lengthBytes.reversed())
 
@@ -147,8 +148,9 @@ class MD5 : HashBase {
             
             // break chunk into sixteen 32-bit words M[j], 0 ≤ j ≤ 15
             var M:[UInt32] = [UInt32](repeating: 0, count: 16)
-            let range = NSRange(location:0, length: M.count * sizeof(UInt32))
-            chunk.getBytes(UnsafeMutablePointer<Void>(M), range: range)
+            let range = NSRange(location:0, length: M.count * MemoryLayout<UInt32>.size)
+            let pointer = UnsafeMutableRawPointer(mutating: M)
+            chunk.getBytes(pointer, range: range)
             
             // Initialize hash value for this chunk:
             var A:UInt32 = hh[0]
@@ -201,9 +203,9 @@ class MD5 : HashBase {
         let buf: NSMutableData = NSMutableData()
         hh.forEach({ (item) -> () in
             var i:UInt32 = item.littleEndian
-            buf.append(&i, length: sizeofValue(i))
+            buf.append(&i, length: MemoryLayout.size(ofValue: i))
         })
         
-        return buf.copy() as! NSData
+        return buf.copy() as! Data
     }
 }

@@ -17,21 +17,23 @@ public class Fetcher<T : DataConvertible> {
         self.key = key
     }
     
-    public func fetch(failure fail: ((NSError?) -> ()), success succeed: (T.Result) -> ()) {}
+    public func fetch(failure fail: @escaping ((NSError?) -> ()), success succeed: @escaping (T.Result) -> ()) {}
     
     public func cancelFetch() {}
 }
 
 class SimpleFetcher<T : DataConvertible> : Fetcher<T> {
     
-    let getValue : () -> T.Result
+    typealias ResultClosure = () -> T.Result
     
-    init(key: String, value getValue : @autoclosure(escaping)() -> T.Result) {
+    let getValue : ResultClosure
+    
+    init(key: String, value getValue: @autoclosure @escaping () -> T.Result) {
         self.getValue = getValue
         super.init(key: key)
     }
     
-    override func fetch(failure fail: ((NSError?) -> ()), success succeed: (T.Result) -> ()) {
+    override func fetch(failure fail: @escaping ((NSError?) -> ()), success succeed: @escaping (T.Result) -> ()) {
         let value = getValue()
         succeed(value)
     }

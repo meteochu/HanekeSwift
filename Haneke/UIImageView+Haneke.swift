@@ -17,12 +17,12 @@ public extension UIImageView {
             return HanekeGlobals.UIKit.formatWithSize(size: viewSize, scaleMode: scaleMode)
     }
     
-    public func hnk_setImageFromURL(URL: NSURL, placeholder : UIImage? = nil, format : Format<UIImage>? = nil, failure fail : ((NSError?) -> ())? = nil, success succeed : ((UIImage) -> ())? = nil) {
-        let fetcher = NetworkFetcher<UIImage>(URL: URL)
+    public func hnk_setImageFromURL(URL: URL, placeholder : UIImage? = nil, format : Format<UIImage>? = nil, failure fail : ((NSError?) -> ())? = nil, success succeed : ((UIImage) -> ())? = nil) {
+        let fetcher = NetworkFetcher<UIImage>(url: URL)
         self.hnk_setImageFromFetcher(fetcher: fetcher, placeholder: placeholder, format: format, failure: fail, success: succeed)
     }
     
-    public func hnk_setImage( image: @autoclosure(escaping)() -> UIImage, key: String, placeholder : UIImage? = nil, format : Format<UIImage>? = nil, success succeed : ((UIImage) -> ())? = nil) {
+    public func hnk_setImage( image: @autoclosure @escaping () -> UIImage, key: String, placeholder : UIImage? = nil, format : Format<UIImage>? = nil, success succeed : ((UIImage) -> ())? = nil) {
         let fetcher = SimpleFetcher<UIImage>(key: key, value: image)
         self.hnk_setImageFromFetcher(fetcher: fetcher, placeholder: placeholder, format: format, success: succeed)
     }

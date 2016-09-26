@@ -21,8 +21,8 @@ public extension UIButton {
         return HanekeGlobals.UIKit.formatWithSize(size: imageSize, scaleMode: scaleMode, allowUpscaling: scaleMode == ImageResizer.ScaleMode.AspectFit ? false : true)
     }
     
-    public func hnk_setImageFromURL(URL: NSURL, state: UIControlState = [], placeholder: UIImage? = nil, format: Format<UIImage>? = nil, failure fail: ((NSError?) -> ())? = nil, success succeed: ((UIImage) -> ())? = nil) {
-        let fetcher = NetworkFetcher<UIImage>(URL: URL)
+    public func hnk_setImageFromURL(URL: URL, state: UIControlState = [], placeholder: UIImage? = nil, format: Format<UIImage>? = nil, failure fail: ((NSError?) -> ())? = nil, success succeed: ((UIImage) -> ())? = nil) {
+        let fetcher = NetworkFetcher<UIImage>(url: URL as URL)
         self.hnk_setImageFromFetcher(fetcher: fetcher, state: state, placeholder: placeholder, format: format, failure: fail, success: succeed)
     }
     
@@ -133,8 +133,8 @@ public extension UIButton {
         return HanekeGlobals.UIKit.formatWithSize(size: imageSize, scaleMode: .Fill)
     }
     
-    public func hnk_setBackgroundImageFromURL(URL : NSURL, state : UIControlState = [], placeholder : UIImage? = nil, format : Format<UIImage>? = nil, failure fail : ((NSError?) -> ())? = nil, success succeed : ((UIImage) -> ())? = nil) {
-        let fetcher = NetworkFetcher<UIImage>(URL: URL)
+    public func hnk_setBackgroundImageFromURL(URL : URL, state : UIControlState = [], placeholder : UIImage? = nil, format : Format<UIImage>? = nil, failure fail : ((NSError?) -> ())? = nil, success succeed : ((UIImage) -> ())? = nil) {
+        let fetcher = NetworkFetcher<UIImage>(url: URL)
         self.hnk_setBackgroundImageFromFetcher(fetcher: fetcher, state: state, placeholder: placeholder, format: format, failure: fail, success: succeed)
     }
     

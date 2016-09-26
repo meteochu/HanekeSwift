@@ -26,16 +26,15 @@ extension HanekeGlobals {
 
 public class NetworkFetcher<T : DataConvertible> : Fetcher<T> {
     
-    let URL : NSURL
+    let url : URL
     
-    public init(URL : NSURL) {
-        self.URL = URL
-
-        let key =  URL.absoluteString
-        super.init(key: key!)
+    public init(url: URL) {
+        self.url = url
+        let key =  url.absoluteString
+        super.init(key: key)
     }
     
-    public var session : URLSession { return URLSession.shared() }
+    public var session : URLSession { return URLSession.shared }
     
     var task : URLSessionDataTask? = nil
     
@@ -43,11 +42,12 @@ public class NetworkFetcher<T : DataConvertible> : Fetcher<T> {
     
     // MARK: Fetcher
     
-    public override func fetch(failure fail : ((NSError?) -> ()), success succeed : (T.Result) -> ()) {
+    public override func fetch(failure fail : @escaping ((NSError?) -> ()), success succeed : @escaping (T.Result) -> ()) {
         self.cancelled = false
-        self.task = self.session.dataTask(with: self.URL as Foundation.URL) { [weak self] data, response, error in
-            self?.onReceiveData(data: data, response: response, error: error, failure: fail, success: succeed)
-        }
+        
+        self.task = self.session.dataTask(with: self.url, completionHandler: { [weak self] data, response, error in
+            self?.onReceiveData(data: data, response: response, error: error as? NSError, failure: fail, success: succeed)
+        })
         
         self.task?.resume()
     }
@@ -59,16 +59,14 @@ public class NetworkFetcher<T : DataConvertible> : Fetcher<T> {
     
     // MARK: Private
     
-    private func onReceiveData(data: NSData!, response: URLResponse!, error: NSError!, failure fail: ((NSError?) -> ()), success succeed: (T.Result) -> ()) {
+    private func onReceiveData(data: Data!, response: URLResponse!, error: NSError!, failure fail: @escaping ((NSError?) -> ()), success succeed: @escaping (T.Result) -> ()) {
 
-        if cancelled { return }
-        
-        let URL = self.URL
+        guard !cancelled else { return }
         
         if let error = error {
             if (error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled) { return }
             
-            Log.debug(message: "Request \(URL.absoluteString) failed", error)
+            Log.debug(message: "Request \(url.absoluteString) failed", error)
             DispatchQueue.main.async {
                 fail(error)
             }
@@ -76,7 +74,7 @@ public class NetworkFetcher<T : DataConvertible> : Fetcher<T> {
         }
         
 
-        if let httpResponse = response as? HTTPURLResponse where !httpResponse.hnk_isValidStatusCode() {
+        if let httpResponse = response as? HTTPURLResponse , !httpResponse.hnk_isValidStatusCode() {
             let description = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
             self.failWithCode(code: .InvalidStatusCode, localizedDescription: description, failure: fail)
             return
@@ -84,14 +82,14 @@ public class NetworkFetcher<T : DataConvertible> : Fetcher<T> {
 
         if !response.hnk_validateLengthOfData(data: data) {
             let localizedFormat = NSLocalizedString("Request expected %ld bytes and received %ld bytes", comment: "Error description")
-            let description = String(format:localizedFormat, response.expectedContentLength, data.length)
+            let description = String(format:localizedFormat, response.expectedContentLength, data.count)
             self.failWithCode(code: .MissingData, localizedDescription: description, failure: fail)
             return
         }
         
         guard let value = T.convertFromData(data: data) else {
             let localizedFormat = NSLocalizedString("Failed to convert value from data at URL %@", comment: "Error description")
-            let description = String(format:localizedFormat, URL.absoluteString!)
+            let description = String(format:localizedFormat, url.absoluteString)
             self.failWithCode(code: .InvalidData, localizedDescription: description, failure: fail)
             return
         }
@@ -99,7 +97,7 @@ public class NetworkFetcher<T : DataConvertible> : Fetcher<T> {
 
     }
     
-    private func failWithCode(code: HanekeGlobals.NetworkFetcher.ErrorCode, localizedDescription: String, failure fail: ((NSError?) -> ())) {
+    private func failWithCode(code: HanekeGlobals.NetworkFetcher.ErrorCode, localizedDescription: String, failure fail: @escaping ((NSError?) -> ())) {
         let error = errorWithCode(code: code.rawValue, description: localizedDescription)
         Log.debug(message: localizedDescription, error)
         DispatchQueue.main.async { fail(error) }

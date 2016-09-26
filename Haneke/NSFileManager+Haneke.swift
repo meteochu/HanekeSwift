@@ -14,8 +14,8 @@ extension FileManager {
 
         let directoryURL = NSURL(fileURLWithPath: path)
         do {
-            let contents = try self.contentsOfDirectory(at: directoryURL as URL, includingPropertiesForKeys: [property], options: FileManager.DirectoryEnumerationOptions())
-            let sortedContents = contents.sorted(isOrderedBefore: { URL1, URL2 in
+            let contents = try self.contentsOfDirectory(at: directoryURL as URL, includingPropertiesForKeys: [URLResourceKey(rawValue: property)], options: FileManager.DirectoryEnumerationOptions())
+            let sortedContents = contents.sorted(by: { URL1, URL2 in
                 
                 // Maybe there's a better way to do this. See: http://stackoverflow.com/questions/25502914/comparing-anyobject-in-swift
                 
@@ -41,7 +41,7 @@ extension FileManager {
                 }
                 
                 if let number1 = value1 as? NSNumber, let number2 = value2 as? NSNumber {
-                    return ascending ? number1 < number2 : number2 < number1
+                    return ascending ? number1.doubleValue < number2.doubleValue : number2.doubleValue < number1.doubleValue
                 }
                 
                 return false
@@ -57,12 +57,4 @@ extension FileManager {
         }
     }
 
-}
-
-func < (lhs: Date, rhs: Date) -> Bool {
-    return lhs.compare(rhs) == .orderedAscending
-}
-
-func < (lhs: NSNumber, rhs: NSNumber) -> Bool {
-    return lhs.compare(rhs) == .orderedAscending
 }

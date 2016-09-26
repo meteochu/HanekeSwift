@@ -22,9 +22,9 @@ extension String {
             return self
         }
 
-        let MD5Calculator = MD5(data)
-        let MD5Data = MD5Calculator.calculate()
-        let resultBytes = UnsafeMutablePointer<CUnsignedChar>(MD5Data.bytes)
+        let MD5Calculator = MD5(data as Data)
+        let MD5Data = MD5Calculator.calculate() as NSData
+        let resultBytes = MD5Data.bytes.assumingMemoryBound(to: CUnsignedChar.self)
         let resultEnumerator = UnsafeBufferPointer<CUnsignedChar>(start: resultBytes, count: MD5Data.length)
         let MD5String = NSMutableString()
         for c in resultEnumerator {
